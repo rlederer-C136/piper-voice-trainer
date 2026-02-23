@@ -34,7 +34,8 @@ fi
 echo "Installing piper training dependencies..."
 # piper_train uses Lightning 1.x APIs (add_argparse_args etc.) removed in 2.0
 # setuptools provides pkg_resources, needed by piper_train at runtime
-pip install "pytorch-lightning>=1.7,<2.0" "onnxruntime>=1.11.0" piper-phonemize "setuptools<70"
+# onnxscript is required by torch.onnx.export in PyTorch 2.6+
+pip install "pytorch-lightning>=1.7,<2.0" "onnxruntime>=1.11.0" piper-phonemize "setuptools<70" onnxscript
 
 echo "Installing piper training module (skipping strict dep pins)..."
 cd "$PROJECT_ROOT/$PIPER_DIR/src/python"
