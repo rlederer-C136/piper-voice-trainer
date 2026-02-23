@@ -1,5 +1,5 @@
 gradio>=4.0
-piper-tts[train]
+piper-tts
 faster-whisper>=1.0
 pydub>=0.25
 numpy

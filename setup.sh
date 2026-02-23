@@ -19,6 +19,22 @@ echo "Installing Python packages (this will take a while — includes PyTorch)..
 pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt
 
+# Clone piper repo and install the training module
+# (piper_train is not published on PyPI — must install from source)
+PIPER_DIR="piper"
+if [ ! -d "$PIPER_DIR" ]; then
+    echo "Cloning piper repository..."
+    git clone https://github.com/rhasspy/piper.git "$PIPER_DIR"
+fi
+
+echo "Installing piper training module..."
+cd "$PIPER_DIR/src/python"
+pip install -e .
+if [ -f build_monotonic_align.sh ]; then
+    bash build_monotonic_align.sh
+fi
+cd "$OLDPWD"
+
 # Download pre-trained checkpoint for fine-tuning
 CHECKPOINT_DIR="checkpoints"
 CHECKPOINT_FILE="$CHECKPOINT_DIR/en_US-lessac-medium.ckpt"
