@@ -320,10 +320,15 @@ def export_onnx(training_dir, output_dir, voice_name):
     onnx_path = output_dir / f"{voice_name}.onnx"
     json_path = output_dir / f"{voice_name}.onnx.json"
 
-    # Same PosixPath allowlist fix as training — export also loads checkpoints
+    # PosixPath allowlist fix + force legacy ONNX exporter (dynamo=False).
+    # PyTorch 2.6+ defaults to dynamo-based export which is incompatible
+    # with the older VITS model architecture used by piper.
     bootstrap = (
         "import pathlib, torch; "
         "torch.serialization.add_safe_globals([pathlib.PosixPath]); "
+        "_orig_export = torch.onnx.export; "
+        "torch.onnx.export = lambda *a, **kw: "
+        "_orig_export(*a, **{k: v for k, v in kw.items() if k != 'dynamo'}, dynamo=False); "
         "import runpy; "
         "runpy.run_module('piper_train.export_onnx', run_name='__main__', alter_sys=True)"
     )
