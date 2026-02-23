@@ -1,0 +1,41 @@
+#!/bin/bash
+# Piper Voice Trainer — One-click setup
+# Run this once on your ML machine to install everything.
+set -e
+
+echo "=== Piper Voice Trainer Setup ==="
+
+# System dependencies
+echo "Installing system packages..."
+sudo apt update
+sudo apt install -y espeak-ng ffmpeg build-essential python3-dev python3-venv
+
+# Python virtual environment
+echo "Creating Python virtual environment..."
+python3 -m venv venv
+source venv/bin/activate
+
+echo "Installing Python packages (this will take a while — includes PyTorch)..."
+pip install --upgrade pip wheel setuptools
+pip install -r requirements.txt
+
+# Download pre-trained checkpoint for fine-tuning
+CHECKPOINT_DIR="checkpoints"
+CHECKPOINT_FILE="$CHECKPOINT_DIR/en_US-lessac-medium.ckpt"
+CHECKPOINT_URL="https://huggingface.co/datasets/rhasspy/piper-checkpoints/resolve/main/en/en_US/lessac/medium/epoch%3D2164-step%3D1355540.ckpt"
+
+mkdir -p "$CHECKPOINT_DIR"
+
+if [ ! -f "$CHECKPOINT_FILE" ]; then
+    echo "Downloading pre-trained Piper checkpoint (~300MB)..."
+    wget -O "$CHECKPOINT_FILE" "$CHECKPOINT_URL"
+else
+    echo "Checkpoint already downloaded."
+fi
+
+echo ""
+echo "=== Setup complete! ==="
+echo "To run the trainer:"
+echo "  source venv/bin/activate"
+echo "  python app.py"
+echo "Then open http://localhost:7860 in your browser."
