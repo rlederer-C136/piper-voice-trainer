@@ -195,7 +195,7 @@ def create_dataset(wavs_dir, transcriptions, dataset_dir):
 def preprocess(dataset_dir, training_dir):
     """Run piper_train.preprocess to prepare training cache. Yields log lines."""
     cmd = [
-        sys.executable, "-m", "piper_train.preprocess",
+        sys.executable, "-u", "-m", "piper_train.preprocess",
         "--language", "en",
         "--input-dir", str(dataset_dir),
         "--output-dir", str(training_dir),
@@ -203,11 +203,19 @@ def preprocess(dataset_dir, training_dir):
         "--single-speaker",
         "--sample-rate", str(SAMPLE_RATE),
     ]
+
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
+
+    yield f"  Running: {' '.join(cmd)}"
+
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
         text=True,
+        env=env,
         bufsize=1,
     )
 
@@ -414,12 +422,9 @@ def run_pipeline(wav_files, voice_name, max_epochs, batch_size,
         # ---- Step 4: Preprocessing ----
         yield log_msg("\nSTEP 4/6: Preprocessing for Piper training..."), None, None
 
-        last_update = time.time()
         for line in preprocess(dataset_dir, training_dir):
-            now = time.time()
-            if line.strip() and (now - last_update > 2.0):
+            if line.strip():
                 yield log_msg(f"  {line}"), None, None
-                last_update = now
 
         yield log_msg("  Preprocessing complete"), None, None
 
