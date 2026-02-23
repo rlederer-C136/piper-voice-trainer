@@ -38,12 +38,13 @@ sed -i 's/raise ValueError("n must be at least one")/n = max(1, n)  # patched/' 
 
 pip install --no-deps -e .
 
-# Build the monotonic alignment Cython extension directly
-# (the repo's build script may have CRLF line endings that break bash)
-# Must run from piper/src/python/ so the output .so lands in the right place
+# Build the monotonic alignment Cython extension
+# Must create the output subdirectory and build from within it
 if [ -d piper_train/vits/monotonic_align ]; then
     echo "Building monotonic alignment extension..."
-    python piper_train/vits/monotonic_align/setup.py build_ext --inplace
+    cd piper_train/vits/monotonic_align
+    mkdir -p monotonic_align
+    python setup.py build_ext --inplace
 fi
 cd "$OLDPWD"
 
