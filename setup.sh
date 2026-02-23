@@ -32,6 +32,10 @@ pip install pytorch-lightning "onnxruntime>=1.11.0" piper-phonemize
 
 echo "Installing piper training module (skipping strict dep pins)..."
 cd "$PIPER_DIR/src/python"
+
+# Fix bug: preprocess crashes when utterances < CPU count (batch size becomes 0)
+sed -i 's/raise ValueError("n must be at least one")/n = max(1, n)  # patched/' piper_train/preprocess.py
+
 pip install --no-deps -e .
 
 # Build the monotonic alignment Cython extension directly
