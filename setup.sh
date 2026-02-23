@@ -29,6 +29,12 @@ fi
 
 echo "Installing piper training module..."
 cd "$PIPER_DIR/src/python"
+
+# Relax strict version pins that conflict with modern packages
+sed -i 's/pytorch-lightning~=1.7.0/pytorch-lightning>=1.7.0/' setup.py
+sed -i 's/torch~=/torch>=/' setup.py
+sed -i 's/onnxruntime~=/onnxruntime>=/' setup.py
+
 pip install -e .
 if [ -f build_monotonic_align.sh ]; then
     bash build_monotonic_align.sh
