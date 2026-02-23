@@ -320,8 +320,15 @@ def export_onnx(training_dir, output_dir, voice_name):
     onnx_path = output_dir / f"{voice_name}.onnx"
     json_path = output_dir / f"{voice_name}.onnx.json"
 
+    # Same PosixPath allowlist fix as training — export also loads checkpoints
+    bootstrap = (
+        "import pathlib, torch; "
+        "torch.serialization.add_safe_globals([pathlib.PosixPath]); "
+        "import runpy; "
+        "runpy.run_module('piper_train.export_onnx', run_name='__main__', alter_sys=True)"
+    )
     cmd = [
-        sys.executable, "-m", "piper_train.export_onnx",
+        sys.executable, "-c", bootstrap,
         str(checkpoint),
         str(onnx_path),
     ]
