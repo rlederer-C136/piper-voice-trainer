@@ -18,7 +18,9 @@ python3 -m venv venv
 source venv/bin/activate
 
 echo "Installing Python packages (this will take a while — includes PyTorch)..."
-pip install --upgrade pip wheel setuptools
+# Pin setuptools<70 — v70+ deprecated and v78+ removed pkg_resources,
+# which pytorch-lightning 1.x and piper_train need at runtime.
+pip install --upgrade pip wheel "setuptools<70"
 pip install -r requirements.txt
 
 # Clone piper repo and install the training module
@@ -32,7 +34,7 @@ fi
 echo "Installing piper training dependencies..."
 # piper_train uses Lightning 1.x APIs (add_argparse_args etc.) removed in 2.0
 # setuptools provides pkg_resources, needed by piper_train at runtime
-pip install "pytorch-lightning>=1.7,<2.0" "onnxruntime>=1.11.0" piper-phonemize setuptools
+pip install "pytorch-lightning>=1.7,<2.0" "onnxruntime>=1.11.0" piper-phonemize "setuptools<70"
 
 echo "Installing piper training module (skipping strict dep pins)..."
 cd "$PROJECT_ROOT/$PIPER_DIR/src/python"
@@ -64,9 +66,8 @@ fi
 # Return to project root for checkpoint download
 cd "$PROJECT_ROOT"
 
-# Reinstall setuptools last — other packages can break pkg_resources
-# (pytorch-lightning 1.x and piper_train import pkg_resources at runtime)
-pip install --force-reinstall setuptools
+# Verify pkg_resources is available (pytorch-lightning 1.x needs it)
+pip install "setuptools<70"
 python -c "import pkg_resources; print('pkg_resources OK')"
 
 # Download pre-trained checkpoint for fine-tuning
