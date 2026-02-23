@@ -462,7 +462,6 @@ def build_ui():
 
     with gr.Blocks(
         title="Piper Voice Trainer",
-        theme=gr.themes.Base(),
     ) as app:
 
         gr.Markdown(
@@ -532,7 +531,6 @@ def build_ui():
                     lines=25,
                     max_lines=40,
                     interactive=False,
-                    show_copy_button=True,
                 )
                 with gr.Row():
                     onnx_output = gr.File(label="Model (.onnx)")
