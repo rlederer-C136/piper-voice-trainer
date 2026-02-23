@@ -36,14 +36,12 @@ pip install --no-deps -e .
 
 # Build the monotonic alignment Cython extension directly
 # (the repo's build script may have CRLF line endings that break bash)
+# Must run from piper/src/python/ so the output .so lands in the right place
 if [ -d piper_train/vits/monotonic_align ]; then
     echo "Building monotonic alignment extension..."
-    cd piper_train/vits/monotonic_align
-    python setup.py build_ext --inplace
-    cd "$OLDPWD"
-else
-    cd "$OLDPWD"
+    python piper_train/vits/monotonic_align/setup.py build_ext --inplace
 fi
+cd "$OLDPWD"
 
 # Download pre-trained checkpoint for fine-tuning
 CHECKPOINT_DIR="checkpoints"
