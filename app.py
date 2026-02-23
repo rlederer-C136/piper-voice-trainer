@@ -193,7 +193,7 @@ def create_dataset(wavs_dir, transcriptions, dataset_dir):
 # ---------------------------------------------------------------------------
 
 def preprocess(dataset_dir, training_dir):
-    """Run piper_train.preprocess to prepare training cache."""
+    """Run piper_train.preprocess to prepare training cache. Yields log lines."""
     cmd = [
         sys.executable, "-m", "piper_train.preprocess",
         "--language", "en",
@@ -203,13 +203,22 @@ def preprocess(dataset_dir, training_dir):
         "--single-speaker",
         "--sample-rate", str(SAMPLE_RATE),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-    if result.returncode != 0:
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+
+    for line in process.stdout:
+        yield line.rstrip()
+
+    process.wait()
+    if process.returncode != 0:
         raise RuntimeError(
-            f"Preprocessing failed (exit {result.returncode}):\n"
-            f"{result.stderr}\n{result.stdout}"
+            f"Preprocessing failed with exit code {process.returncode}"
         )
-    return result.stdout
 
 
 # ---------------------------------------------------------------------------
@@ -405,7 +414,13 @@ def run_pipeline(wav_files, voice_name, max_epochs, batch_size,
         # ---- Step 4: Preprocessing ----
         yield log_msg("\nSTEP 4/6: Preprocessing for Piper training..."), None, None
 
-        preprocess(dataset_dir, training_dir)
+        last_update = time.time()
+        for line in preprocess(dataset_dir, training_dir):
+            now = time.time()
+            if line.strip() and (now - last_update > 2.0):
+                yield log_msg(f"  {line}"), None, None
+                last_update = now
+
         yield log_msg("  Preprocessing complete"), None, None
 
         # ---- Step 5: Training ----
