@@ -241,8 +241,19 @@ def train(training_dir, max_epochs, batch_size, gpu_index):
             f"Run setup.sh to download it."
         )
 
+    # PyTorch 2.6+ / Lightning Fabric passes weights_only=True to torch.load,
+    # which rejects the Piper checkpoint (contains pathlib.PosixPath).
+    # We must allowlist PosixPath BEFORE piper_train imports anything.
+    # Use python -c with a wrapper that patches torch, then runs the module.
+    bootstrap = (
+        "import pathlib, torch; "
+        "torch.serialization.add_safe_globals([pathlib.PosixPath]); "
+        "import runpy; "
+        "runpy.run_module('piper_train', run_name='__main__', alter_sys=True)"
+    )
+
     cmd = [
-        sys.executable, "-m", "piper_train",
+        sys.executable, "-c", bootstrap,
         "--dataset-dir", str(training_dir),
         "--accelerator", "gpu",
         "--devices", "1",
@@ -257,9 +268,6 @@ def train(training_dir, max_epochs, batch_size, gpu_index):
 
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
-    # PyTorch 2.6+ defaults to weights_only=True which rejects the Piper
-    # checkpoint (it contains pathlib.PosixPath). Allow full unpickling.
-    env["TORCH_FORCE_WEIGHTS_ONLY_LOAD"] = "0"
 
     process = subprocess.Popen(
         cmd,
