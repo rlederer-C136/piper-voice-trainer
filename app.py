@@ -531,7 +531,7 @@ def build_ui():
                 with gr.Accordion("Advanced Options", open=False):
                     max_epochs = gr.Slider(
                         label="Max Training Epochs",
-                        minimum=3000,
+                        minimum=2200,
                         maximum=10000,
                         value=6000,
                         step=500,
