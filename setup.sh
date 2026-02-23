@@ -33,10 +33,17 @@ pip install pytorch-lightning "onnxruntime>=1.11.0" piper-phonemize
 echo "Installing piper training module (skipping strict dep pins)..."
 cd "$PIPER_DIR/src/python"
 pip install --no-deps -e .
-if [ -f build_monotonic_align.sh ]; then
-    bash build_monotonic_align.sh
+
+# Build the monotonic alignment Cython extension directly
+# (the repo's build script may have CRLF line endings that break bash)
+if [ -d piper_train/vits/monotonic_align ]; then
+    echo "Building monotonic alignment extension..."
+    cd piper_train/vits/monotonic_align
+    python setup.py build_ext --inplace
+    cd "$OLDPWD"
+else
+    cd "$OLDPWD"
 fi
-cd "$OLDPWD"
 
 # Download pre-trained checkpoint for fine-tuning
 CHECKPOINT_DIR="checkpoints"
