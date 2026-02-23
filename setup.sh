@@ -3,6 +3,8 @@
 # Run this once on your ML machine to install everything.
 set -e
 
+PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+
 echo "=== Piper Voice Trainer Setup ==="
 
 # System dependencies
@@ -31,7 +33,7 @@ echo "Installing piper training dependencies..."
 pip install pytorch-lightning "onnxruntime>=1.11.0" piper-phonemize
 
 echo "Installing piper training module (skipping strict dep pins)..."
-cd "$PIPER_DIR/src/python"
+cd "$PROJECT_ROOT/$PIPER_DIR/src/python"
 
 # Fix bug: preprocess crashes when utterances < CPU count (batch size becomes 0)
 sed -i 's/raise ValueError("n must be at least one")/n = max(1, n)  # patched/' piper_train/preprocess.py
@@ -39,14 +41,26 @@ sed -i 's/raise ValueError("n must be at least one")/n = max(1, n)  # patched/' 
 pip install --no-deps -e .
 
 # Build the monotonic alignment Cython extension
-# Must create the output subdirectory and build from within it
+# The stock setup.py derives a fully-qualified extension name from __init__.py
+# files up the tree, causing --inplace to write the .so to a wrong relative path.
+# We bypass it and build with an explicit short module name instead.
 if [ -d piper_train/vits/monotonic_align ]; then
     echo "Building monotonic alignment extension..."
+    pip install cython
     cd piper_train/vits/monotonic_align
     mkdir -p monotonic_align
-    python setup.py build_ext --inplace
+    python -c "
+from setuptools import setup, Extension
+from Cython.Build import cythonize
+import numpy
+ext = Extension('monotonic_align.core', sources=['core.pyx'],
+                include_dirs=[numpy.get_include()])
+setup(ext_modules=cythonize([ext]), script_args=['build_ext', '--inplace'])
+"
 fi
-cd "$OLDPWD"
+
+# Return to project root for checkpoint download
+cd "$PROJECT_ROOT"
 
 # Download pre-trained checkpoint for fine-tuning
 CHECKPOINT_DIR="checkpoints"
