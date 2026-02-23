@@ -257,6 +257,9 @@ def train(training_dir, max_epochs, batch_size, gpu_index):
 
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
+    # PyTorch 2.6+ defaults to weights_only=True which rejects the Piper
+    # checkpoint (it contains pathlib.PosixPath). Allow full unpickling.
+    env["TORCH_FORCE_WEIGHTS_ONLY_LOAD"] = "0"
 
     process = subprocess.Popen(
         cmd,
