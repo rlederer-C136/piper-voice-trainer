@@ -64,6 +64,11 @@ fi
 # Return to project root for checkpoint download
 cd "$PROJECT_ROOT"
 
+# Reinstall setuptools last — other packages can break pkg_resources
+# (pytorch-lightning 1.x and piper_train import pkg_resources at runtime)
+pip install --force-reinstall setuptools
+python -c "import pkg_resources; print('pkg_resources OK')"
+
 # Download pre-trained checkpoint for fine-tuning
 CHECKPOINT_DIR="checkpoints"
 CHECKPOINT_FILE="$CHECKPOINT_DIR/en_US-lessac-medium.ckpt"
